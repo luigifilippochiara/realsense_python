@@ -5,6 +5,7 @@ data/
 runs/
 
 # Files
+*.bag
 *.txt
 *.csv
 *.out

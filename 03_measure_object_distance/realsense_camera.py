@@ -63,3 +63,4 @@ class RealsenseCamera:
         # Stack both images horizontally
         
         #images = np.hstack((color_image, depth_colormap))
+

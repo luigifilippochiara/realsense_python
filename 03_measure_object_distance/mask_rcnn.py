@@ -124,3 +124,4 @@ class MaskRCNN:
             cv2.rectangle(bgr_frame, (x, y), (x2, y2), color, 1)
 
         return bgr_frame
+
