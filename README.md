@@ -1,7 +1,7 @@
 # RealSense Python
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](/LICENSE)
 
-Some Python scripts to get started with the Intel RealSense depth cameras
+Some Python scripts to get started with the Intel RealSense depth cameras.
 
 
 ## Scripts description
