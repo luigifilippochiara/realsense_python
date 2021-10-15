@@ -7,15 +7,15 @@ import argparse
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--name', default='stream', type=str)
+        '--name', '-n', default='stream', type=str)
     parser.add_argument(
-        '--format', default='mp4', type=str, choices=['mp4', 'avi'])
+        '--format', '-f', default='mp4', type=str, choices=['mp4', 'avi'])
     parser.add_argument(
         '--width', default=1280, type=int, choices=[1280, 848, 640])
     parser.add_argument(
         '--height', default=720, type=int, choices=[720, 480, 360])
     parser.add_argument(
-        '--FPS', default=30, type=int, choices=[15, 25, 30, 60, 90])
+        '--FPS', '-fps', default=30, type=int, choices=[15, 25, 30, 60, 90])
     return parser
 
 
