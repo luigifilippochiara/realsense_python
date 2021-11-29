@@ -46,7 +46,8 @@ def main(args):
 
     depth_sensor = pipe_profile.get_device().first_depth_sensor()
     current_preset = depth_sensor.get_option(rs.option.visual_preset)
-    print(current_preset)
+    visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, current_preset)
+    print(visual_preset)
 
 
     # print("1", rs.option.visual_preset)
