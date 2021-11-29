@@ -1,6 +1,6 @@
 """
-Load a recorded .bag streams of depth and RGB, and save 
-the two streams as separate video files.
+Load a recorded .bag streams, and save 
+the depth stream as a video file.
 """
 
 
@@ -51,10 +51,8 @@ def main(args):
     elif args.format == 'avi':
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
     # set output video names
-    color_path = args.name + '_rgb.' + args.format
     depth_path = args.name + '_depth.' + args.format
     # set output video writers
-    colorwriter = cv2.VideoWriter(color_path, fourcc, args.FPS, (args.width, args.height), 1)
     depthwriter = cv2.VideoWriter(depth_path, fourcc, args.FPS, (args.width, args.height), 1)
 
     # Create pipeline
@@ -62,15 +60,16 @@ def main(args):
     # Create a config object
     config = rs.config()
     # Tell config that we will use a recorded device from file to be used by the pipeline through playback.
-    rs.config.enable_device_from_file(config, args.input)
-    # Configure the pipeline to stream the depth and RGB stream
+    config.enable_device_from_file(args.input, repeat_playback=False)
+    # Configure the pipeline to stream the depth stream
     # REMEMBER that width, height and FPS should be the same of the recorded stream
-    #config.enable_stream(rs.stream.depth, args.width, args.height, rs.format.z16, args.FPS)
-    #config.enable_stream(rs.stream.color, args.width, args.height, rs.format.bgr8, args.FPS)
-    config.enable_all_streams()
+    config.enable_stream(rs.stream.depth, args.width, args.height, rs.format.z16, args.FPS)
 
     # Start streaming from file
-    pipeline.start(config)
+    profile = pipeline.start(config)
+    playback = profile.get_device().as_playback()
+    playback.set_real_time(False)
+    last_pos = playback.get_position()
 
     try:
         # Create colorizer object
@@ -78,39 +77,33 @@ def main(args):
 
         # Streaming loop
         while True:
-            # Get frameset of depth
+            # Get frameset
             frames = pipeline.wait_for_frames()
-            # Get depth and RGB frames
+            curr_pos = playback.get_position()
+            
+            # DEPTH
             depth_frame = frames.get_depth_frame()
-            color_frame = frames.get_color_frame()
-
             if not depth_frame:
                 print("No depth_frame")
-            if not color_frame:
-                print("No color_frame")
-
+                continue
             # Colorize depth frame to jet colormap
             depth_color_frame = colorizer.colorize(depth_frame)
             # Convert depth_frame to numpy array to render image in opencv
             depth_color_image = np.asanyarray(depth_color_frame.get_data())
-
-            # Convert images to numpy arrays
-            color_image = np.asanyarray(color_frame.get_data())
-
             # Save to disk
             depthwriter.write(depth_color_image)
-            colorwriter.write(color_image)
-
             # Render image in opencv window
             cv2.imshow('Depth', depth_color_image)
-            cv2.imshow('RGB', color_image)
+
+            if curr_pos < last_pos:
+                break
+            last_pos = curr_pos
 
             # if pressed escape exit program
             if cv2.waitKey(1) in [27, ord("q")]:
                 break
     finally:
         cv2.destroyAllWindows()
-        colorwriter.release()
         depthwriter.release()
         pipeline.stop()
 
