@@ -69,7 +69,7 @@ def main(args):
     profile = pipeline.start(config)
     playback = profile.get_device().as_playback()
     playback.set_real_time(False)
-    duration = playback.get_duration()
+    duration = playback.get_duration().total_seconds() * 1e6
     print("duration", int(duration))
     last_pos = playback.get_position()
     print("last_pos", last_pos)
