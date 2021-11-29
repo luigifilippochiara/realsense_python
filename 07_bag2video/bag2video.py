@@ -95,7 +95,6 @@ def main(args):
             # Render image in opencv window
             cv2.imshow('Depth', depth_color_image)
 
-            print(f"{curr_pos}/{last_pos}")
             if curr_pos == last_pos:
                 print("End of recording reached")
                 break
