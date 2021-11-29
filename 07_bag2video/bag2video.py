@@ -69,7 +69,10 @@ def main(args):
     profile = pipeline.start(config)
     playback = profile.get_device().as_playback()
     playback.set_real_time(False)
+    duration = playback.get_duration()
+    print("duration", duration)
     last_pos = playback.get_position()
+    print("last_pos", last_pos)
 
     try:
         # Create colorizer object
