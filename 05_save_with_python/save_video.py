@@ -43,22 +43,23 @@ def main(args):
     config.enable_stream(rs.stream.color, args.width, args.height, rs.format.bgr8, args.FPS)
 
     pipe_profile = pipeline.start(config)
-
     depth_sensor = pipe_profile.get_device().first_depth_sensor()
+
     current_preset = depth_sensor.get_option(rs.option.visual_preset)
     visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, current_preset)
-    print(visual_preset)
+    print("current preset", visual_preset)
 
+    preset_range = depth_sensor.get_option_range(rs.option.visual_preset)
+    print(preset_range, "\n")
+    for i in range(int(preset_range.max)):
+        visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, i)
+        print(i, visual_preset)
+        if visual_preset == "High Accuracy":
+            depth_sensor.set_option(rs.option.visual_preset, i)
 
-    # print("1", rs.option.visual_preset)
-    # preset_range = depth_sensor.get_option_range(rs.option.visual_preset)
-    # print('preset range:'+str(preset_range))
-
-    # for i in range(int(preset_range.max)):
-    #     visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, i)
-    #     print(i, visual_preset)
-    #     if visual_preset == "High Accuracy":
-    #         depth_sensor.set_option(rs.option.visual_preset, i)
+    current_preset = depth_sensor.get_option(rs.option.visual_preset)
+    visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, current_preset)
+    print("current preset", visual_preset)
 
     try:
         while True:
