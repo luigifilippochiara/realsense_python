@@ -15,7 +15,7 @@ import argparse
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--input', '-i', type=str, help="Path to the bag file")
+        '--input', '-i', default='record.bag', type=str, help="Path to the bag file")
     parser.add_argument(
         '--name', '-n', default='record', type=str)
     parser.add_argument(
