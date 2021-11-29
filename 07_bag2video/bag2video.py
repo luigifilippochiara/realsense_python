@@ -81,9 +81,12 @@ def main(args):
             # Convert depth_frame to numpy array to render image in opencv
             depth_color_image = np.asanyarray(depth_color_frame.get_data())
 
+            # Convert images to numpy arrays
+            color_image = np.asanyarray(color_frame.get_data())
+
             # Save to disk
             colorwriter.write(color_image)
-            depthwriter.write(depth_colormap)
+            depthwriter.write(depth_color_image)
 
             # Render image in opencv window
             cv2.imshow('Depth', depth_color_image)
