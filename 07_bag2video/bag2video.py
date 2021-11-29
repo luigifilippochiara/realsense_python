@@ -22,6 +22,12 @@ def get_parser():
         '--name', '-n', default='record', type=str)
     parser.add_argument(
         '--format', '-f', default='mp4', type=str, choices=['mp4', 'avi'])
+    parser.add_argument(
+        '--width', default=1280, type=int, choices=[1280, 848, 640])
+    parser.add_argument(
+        '--height', default=720, type=int, choices=[720, 480, 360])
+    parser.add_argument(
+        '--FPS', '-fps', default=30, type=int, choices=[15, 25, 30, 60, 90])
     return parser
 
 
@@ -42,15 +48,6 @@ def get_args(parser):
 
 
 def main(args):
-    jason_obj = json.load(open(args.json))
-    json_string= str(jason_obj).replace("'", '\"')
-    print(jason_obj)
-    print(json_string)
-    width = int(jason_obj['viewer']['stream-width'])
-    height = int(jason_obj['viewer']['stream-height'])
-    FPS = int(jason_obj['viewer']['stream-fps'])
-    print(width, height, FPS)
-
     # set output video encoding
     if args.format == 'mp4':
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -59,7 +56,7 @@ def main(args):
     # set output video names
     depth_path = args.name + '_depth.' + args.format
     # set output video writers
-    depthwriter = cv2.VideoWriter(depth_path, fourcc, FPS, (width, height), 1)
+    depthwriter = cv2.VideoWriter(depth_path, fourcc, args.FPS, (args.width, args.height), 1)
 
     # Create pipeline
     pipeline = rs.pipeline()
@@ -69,22 +66,17 @@ def main(args):
     config.enable_device_from_file(args.input, repeat_playback=False)
     # Configure the pipeline to stream the depth stream
     # REMEMBER that width, height and FPS should be the same of the recorded stream
-    config.enable_stream(rs.stream.depth, width, height, rs.format.z16, FPS)
+    config.enable_stream(rs.stream.depth, args.width, args.height, rs.format.z16, args.FPS)
 
     # Start streaming from file
     profile = pipeline.start(config)
     device = profile.get_device()
-    print(device)
 
     # Playback is used to find duration of recorded video
-    # playback = device.as_playback()
-    # playback.set_real_time(False)
-    # # duration in nano seconds
-    # duration = playback.get_duration().total_seconds() * 1e9
-
-    # Advanced mode is used to set config json files
-    advnc_mode = rs.rs400_advanced_mode(device)
-    advnc_mode.load_json(json_string)
+    playback = device.as_playback()
+    playback.set_real_time(False)
+    # duration in nano seconds
+    duration = playback.get_duration().total_seconds() * 1e9
 
     try:
         # Create colorizer object
@@ -110,10 +102,10 @@ def main(args):
             # Render image in opencv window
             cv2.imshow('Depth', depth_color_image)
 
-            # print("Progress:", f"{curr_pos}/{duration}")
-            # if curr_pos >= duration:
-            #     print("End of recording reached")
-            #     break
+            print("Progress:", f"{curr_pos}/{duration}")
+            if curr_pos >= duration:
+                print("End of recording reached")
+                break
 
             # if pressed escape exit program
             if cv2.waitKey(1) in [27, ord("q")]:
