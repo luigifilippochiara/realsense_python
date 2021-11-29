@@ -75,7 +75,7 @@ def main(args):
     device = profile.get_device()
 
     # Playback is used to find duration of recorded video
-    playback = device..as_playback()
+    playback = device.as_playback()
     playback.set_real_time(False)
     # duration in nano seconds
     duration = playback.get_duration().total_seconds() * 1e9
