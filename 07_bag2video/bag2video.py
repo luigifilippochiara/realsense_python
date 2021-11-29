@@ -68,7 +68,7 @@ def main(args):
     # Start streaming from file
     profile = pipeline.start(config)
     playback = profile.get_device().as_playback()
-    playback.set_real_time(False)
+    # playback.set_real_time(False)
     last_pos = playback.get_position()
 
     try:
@@ -95,6 +95,7 @@ def main(args):
             # Render image in opencv window
             cv2.imshow('Depth', depth_color_image)
 
+            print(f"{curr_pos}/{last_pos}")
             if curr_pos == last_pos:
                 print("End of recording reached")
                 break
@@ -106,6 +107,7 @@ def main(args):
         cv2.destroyAllWindows()
         depthwriter.release()
         pipeline.stop()
+        print("Done.")
 
 
 if __name__ == '__main__':
