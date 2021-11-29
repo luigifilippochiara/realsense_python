@@ -70,7 +70,7 @@ def main(args):
     playback = profile.get_device().as_playback()
     playback.set_real_time(False)
     duration = playback.get_duration()
-    print("duration", duration)
+    print("duration", int(duration))
     last_pos = playback.get_position()
     print("last_pos", last_pos)
 
