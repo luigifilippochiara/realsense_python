@@ -14,6 +14,10 @@ def get_parser():
     parser.add_argument(
         '--format', '-f', default='mp4', type=str, choices=['mp4', 'avi'])
     parser.add_argument(
+        '--width', default=1280, type=int, choices=[1280, 848, 640])
+    parser.add_argument(
+        '--height', default=720, type=int, choices=[720, 480, 360])
+    parser.add_argument(
         '--FPS', '-fps', default=30, type=int, choices=[15, 25, 30, 60, 90])
     return parser
 
