@@ -2,6 +2,7 @@ import pyrealsense2 as rs
 import numpy as np
 import cv2
 import argparse
+import json
 
 
 def get_parser():
@@ -11,19 +12,20 @@ def get_parser():
     parser.add_argument(
         '--format', '-f', default='mp4', type=str, choices=['mp4', 'avi'])
     parser.add_argument(
-        '--width', default=1280, type=int, choices=[1280, 848, 640])
-    parser.add_argument(
-        '--height', default=720, type=int, choices=[720, 480, 360])
-    parser.add_argument(
-        '--FPS', '-fps', default=30, type=int, choices=[15, 25, 30, 60, 90])
-    parser.add_argument(
-        '--visual_preset', default="High Density", type=str, 
-        choices=["Custom", "Default", "Hand", "High Accuracy", "High Density"])
+        '--json', '-j', default='config.json', type=str, help="Path to the json config file")
+
     return parser
 
 
-
 def main(args):
+    # json config
+    json_path = args.json
+    jason_obj = json.load(open(json_path))
+    json_string= str(jason_obj).replace("'", '\"')
+    width = int(jsonObj['viewer']['stream-width'])
+    height = int(jsonObj['viewer']['stream-height'])
+    FPS = int(jsonObj['viewer']['stream-fps'])
+
     # set output video encoding
     if args.format == 'mp4':
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -33,28 +35,20 @@ def main(args):
     color_path = args.name + '_rgb.' + args.format
     depth_path = args.name + '_depth.' + args.format
     # set output video writers
-    colorwriter = cv2.VideoWriter(color_path, fourcc, args.FPS, (args.width, args.height), 1)
-    depthwriter = cv2.VideoWriter(depth_path, fourcc, args.FPS, (args.width, args.height), 1)
+    colorwriter = cv2.VideoWriter(color_path, fourcc, FPS, (args.width, height), 1)
+    depthwriter = cv2.VideoWriter(depth_path, fourcc, FPS, (args.width, height), 1)
 
     # define pipeline and its config
     pipeline = rs.pipeline()
     config = rs.config()
-    config.enable_stream(rs.stream.depth, args.width, args.height, rs.format.z16, args.FPS)
-    config.enable_stream(rs.stream.color, args.width, args.height, rs.format.bgr8, args.FPS)
+    config.enable_stream(rs.stream.depth, width, height, rs.format.z16, FPS)
+    config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, FPS)
 
     pipe_profile = pipeline.start(config)
-    depth_sensor = pipe_profile.get_device().first_depth_sensor()
 
-    # set visual preset
-    preset_range = depth_sensor.get_option_range(rs.option.visual_preset)
-    for i in range(int(preset_range.max)):
-        visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, i)
-        if visual_preset == args.visual_preset:
-            depth_sensor.set_option(rs.option.visual_preset, i)
-
-    current_preset = depth_sensor.get_option(rs.option.visual_preset)
-    current_visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, current_preset)
-    print("Visual preset", current_visual_preset)
+    device = pipe_profile.get_device()
+    advnc_mode = rs.rs400_advanced_mode(device)
+    advnc_mode.load_json(json_string)
 
     try:
         # Streaming loop
@@ -68,17 +62,17 @@ def main(args):
                 print("Error, impossible to get the frame, make sure that the Intel Realsense camera is correctly connected")
                 continue
 
-            # Define post-processing filters
-            depth_to_disparity = rs.disparity_transform(True)
-            spatial = rs.spatial_filter()
+            # # Define post-processing filters
+            # depth_to_disparity = rs.disparity_transform(True)
+            # spatial = rs.spatial_filter()
 
-            # Apply filters to the depth channel
-            filtered_depth = depth_to_disparity.process(depth_frame)
-            filtered_depth = spatial.process(filtered_depth)
+            # # Apply filters to the depth channel
+            # filtered_depth = depth_to_disparity.process(depth_frame)
+            # filtered_depth = spatial.process(filtered_depth)
 
             # Create colormap to show the depth of the Objects
             colorizer = rs.colorizer()
-            depth_colormap = np.asanyarray(colorizer.colorize(filtered_depth).get_data())
+            depth_colormap = np.asanyarray(colorizer.colorize(depth_frame).get_data())
 
             # Convert images to numpy arrays
             color_image = np.asanyarray(color_frame.get_data())

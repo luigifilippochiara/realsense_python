@@ -17,8 +17,6 @@ def get_parser():
     parser.add_argument(
         '--input', '-i', type=str, help="Path to the bag file")
     parser.add_argument(
-        '--json', '-j', default='config.json', type=str, help="Path to the json config file")
-    parser.add_argument(
         '--name', '-n', default='record', type=str)
     parser.add_argument(
         '--format', '-f', default='mp4', type=str, choices=['mp4', 'avi'])
