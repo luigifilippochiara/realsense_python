@@ -82,15 +82,15 @@ def main(args):
             depth_color_image = np.asanyarray(depth_color_frame.get_data())
 
             # Convert images to numpy arrays
-            color_image = np.asanyarray(color_frame.get_data())
+            # color_image = np.asanyarray(color_frame.get_data())
 
             # Save to disk
-            colorwriter.write(color_image)
+            # colorwriter.write(color_image)
             depthwriter.write(depth_color_image)
 
             # Render image in opencv window
             cv2.imshow('Depth', depth_color_image)
-            cv2.imshow('RGB', color_image)
+            # cv2.imshow('RGB', color_image)
 
             # if pressed escape exit program
             if cv2.waitKey(1) in [27, ord("q")]:
