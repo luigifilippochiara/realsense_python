@@ -68,7 +68,7 @@ def main(args):
     # Start streaming from file
     profile = pipeline.start(config)
     playback = profile.get_device().as_playback()
-    # playback.set_real_time(False)
+    playback.set_real_time(False)
     last_pos = playback.get_position()
 
     try:
