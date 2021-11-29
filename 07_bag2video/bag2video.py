@@ -1,3 +1,9 @@
+"""
+Load a recorded .bag streams of depth and RGB, and save 
+the two streams as separate video files.
+"""
+
+
 import pyrealsense2 as rs
 import numpy as np
 import cv2
@@ -57,9 +63,10 @@ def main(args):
     config = rs.config()
     # Tell config that we will use a recorded device from file to be used by the pipeline through playback.
     rs.config.enable_device_from_file(config, args.input)
-    # Configure the pipeline to stream the depth stream
-    # Change this parameters according to the recorded bag file resolution
-    config.enable_stream(rs.stream.depth, rs.format.z16, args.FPS)
+    # Configure the pipeline to stream the depth and RGB stream
+    # REMEMBER that width, height and FPS should be the same of the recorded stream
+    config.enable_stream(rs.stream.depth, args.width, args.height, rs.format.z16, args.FPS)
+    config.enable_stream(rs.stream.color, args.width, args.height, rs.format.bgr8, args.FPS)
 
     # Start streaming from file
     pipeline.start(config)
@@ -87,15 +94,15 @@ def main(args):
             depth_color_image = np.asanyarray(depth_color_frame.get_data())
 
             # Convert images to numpy arrays
-            # color_image = np.asanyarray(color_frame.get_data())
+            color_image = np.asanyarray(color_frame.get_data())
 
             # Save to disk
             depthwriter.write(depth_color_image)
-            # colorwriter.write(color_image)
+            colorwriter.write(color_image)
 
             # Render image in opencv window
             cv2.imshow('Depth', depth_color_image)
-            # cv2.imshow('RGB', color_image)
+            cv2.imshow('RGB', color_image)
 
             # if pressed escape exit program
             if cv2.waitKey(1) in [27, ord("q")]:
