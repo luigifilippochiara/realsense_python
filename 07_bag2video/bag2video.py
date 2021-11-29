@@ -76,21 +76,26 @@ def main(args):
             depth_frame = frames.get_depth_frame()
             color_frame = frames.get_color_frame()
 
+            if not depth_frame or not color_frame:
+                # If there is no frame, probably camera not connected, return False
+                print("Error, impossible to get the frame, make sure that the Intel Realsense camera is correctly connected")
+                continue
+
             # Colorize depth frame to jet colormap
             depth_color_frame = colorizer.colorize(depth_frame)
             # Convert depth_frame to numpy array to render image in opencv
             depth_color_image = np.asanyarray(depth_color_frame.get_data())
 
             # Convert images to numpy arrays
-            # color_image = np.asanyarray(color_frame.get_data())
+            color_image = np.asanyarray(color_frame.get_data())
 
             # Save to disk
-            # colorwriter.write(color_image)
             depthwriter.write(depth_color_image)
+            colorwriter.write(color_image)
 
             # Render image in opencv window
             cv2.imshow('Depth', depth_color_image)
-            # cv2.imshow('RGB', color_image)
+            cv2.imshow('RGB', color_image)
 
             # if pressed escape exit program
             if cv2.waitKey(1) in [27, ord("q")]:
@@ -107,3 +112,4 @@ if __name__ == '__main__':
     args = get_args(parser)
     print(args)
     main(args)
+
