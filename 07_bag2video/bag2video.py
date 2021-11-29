@@ -49,6 +49,7 @@ def main(args):
     width = int(jason_obj['viewer']['stream-width'])
     height = int(jason_obj['viewer']['stream-height'])
     FPS = int(jason_obj['viewer']['stream-fps'])
+    print(width, height, FPS)
 
     # set output video encoding
     if args.format == 'mp4':
@@ -73,12 +74,13 @@ def main(args):
     # Start streaming from file
     profile = pipeline.start(config)
     device = profile.get_device()
+    print(device)
 
     # Playback is used to find duration of recorded video
-    playback = device.as_playback()
-    playback.set_real_time(False)
-    # duration in nano seconds
-    duration = playback.get_duration().total_seconds() * 1e9
+    # playback = device.as_playback()
+    # playback.set_real_time(False)
+    # # duration in nano seconds
+    # duration = playback.get_duration().total_seconds() * 1e9
 
     # Advanced mode is used to set config json files
     advnc_mode = rs.rs400_advanced_mode(device)
@@ -108,10 +110,10 @@ def main(args):
             # Render image in opencv window
             cv2.imshow('Depth', depth_color_image)
 
-            print("Progress:", f"{curr_pos}/{duration}")
-            if curr_pos >= duration:
-                print("End of recording reached")
-                break
+            # print("Progress:", f"{curr_pos}/{duration}")
+            # if curr_pos >= duration:
+            #     print("End of recording reached")
+            #     break
 
             # if pressed escape exit program
             if cv2.waitKey(1) in [27, ord("q")]:
