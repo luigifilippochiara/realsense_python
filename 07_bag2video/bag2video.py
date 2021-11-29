@@ -65,8 +65,9 @@ def main(args):
     rs.config.enable_device_from_file(config, args.input)
     # Configure the pipeline to stream the depth and RGB stream
     # REMEMBER that width, height and FPS should be the same of the recorded stream
-    config.enable_stream(rs.stream.depth, args.width, args.height, rs.format.z16, args.FPS)
-    config.enable_stream(rs.stream.color, args.width, args.height, rs.format.bgr8, args.FPS)
+    #config.enable_stream(rs.stream.depth, args.width, args.height, rs.format.z16, args.FPS)
+    #config.enable_stream(rs.stream.color, args.width, args.height, rs.format.bgr8, args.FPS)
+    config.enable_all_streams()
 
     # Start streaming from file
     pipeline.start(config)
