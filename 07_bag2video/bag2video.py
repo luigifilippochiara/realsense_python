@@ -67,9 +67,9 @@ def main(args):
 
     # Start streaming from file
     profile = pipeline.start(config)
-    # playback = profile.get_device().as_playback()
-    # playback.set_real_time(False)
-    # last_pos = playback.get_position()
+    playback = profile.get_device().as_playback()
+    playback.set_real_time(False)
+    last_pos = playback.get_position()
 
     try:
         # Create colorizer object
@@ -79,7 +79,7 @@ def main(args):
         while True:
             # Get frameset
             frames = pipeline.wait_for_frames()
-            # curr_pos = playback.get_position()
+            curr_pos = playback.get_position()
             
             # DEPTH
             depth_frame = frames.get_depth_frame()
@@ -95,6 +95,7 @@ def main(args):
             # Render image in opencv window
             cv2.imshow('Depth', depth_color_image)
 
+            print(f"{curr_pos}/{last_pos}")
             # if curr_pos < last_pos:
             #     break
             # last_pos = curr_pos
