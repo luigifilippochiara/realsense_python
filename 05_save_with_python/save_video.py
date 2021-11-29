@@ -57,6 +57,7 @@ def main(args):
     print("Visual preset", current_visual_preset)
 
     try:
+        # Streaming loop
         while True:
             frames = pipeline.wait_for_frames()
             depth_frame = frames.get_depth_frame()
