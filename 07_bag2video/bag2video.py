@@ -96,6 +96,7 @@ def main(args):
             # Render image in opencv window
             cv2.imshow('Depth', depth_color_image)
 
+            print("Progress:", f"{curr_pos}/{duration}")
             if curr_pos >= duration:
                 print("End of recording reached")
                 break
