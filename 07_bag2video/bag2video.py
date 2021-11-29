@@ -14,10 +14,6 @@ def get_parser():
     parser.add_argument(
         '--format', '-f', default='mp4', type=str, choices=['mp4', 'avi'])
     parser.add_argument(
-        '--width', default=1280, type=int, choices=[1280, 848, 640])
-    parser.add_argument(
-        '--height', default=720, type=int, choices=[720, 480, 360])
-    parser.add_argument(
         '--FPS', '-fps', default=30, type=int, choices=[15, 25, 30, 60, 90])
     return parser
 
@@ -74,17 +70,20 @@ def main(args):
             frames = pipeline.wait_for_frames()
             # Get depth and RGB frames
             depth_frame = frames.get_depth_frame()
-            # color_frame = frames.get_color_frame()
+            color_frame = frames.get_color_frame()
 
             # Colorize depth frame to jet colormap
             depth_color_frame = colorizer.colorize(depth_frame)
-
             # Convert depth_frame to numpy array to render image in opencv
             depth_color_image = np.asanyarray(depth_color_frame.get_data())
 
+            # Save to disk
+            colorwriter.write(color_image)
+            depthwriter.write(depth_colormap)
+
             # Render image in opencv window
             cv2.imshow('Depth', depth_color_image)
-            # cv2.imshow('RGB', color_image)
+            cv2.imshow('RGB', color_image)
 
             # if pressed escape exit program
             if cv2.waitKey(1) in [27, ord("q")]:

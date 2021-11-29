@@ -91,9 +91,11 @@ def main(args):
             cv2.imshow('RGB', color_image)
             cv2.imshow('Depth', depth_colormap)
             
-            if cv2.waitKey(1) == ord("q"):
+            # if pressed escape exit program
+            if cv2.waitKey(1) in [27, ord("q")]:
                 break
     finally:
+        cv2.destroyAllWindows()
         colorwriter.release()
         depthwriter.release()
         pipeline.stop()
