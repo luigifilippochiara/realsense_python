@@ -45,10 +45,10 @@ def main(args):
     jason_obj = json.load(open(args.json))
     json_string= str(jason_obj).replace("'", '\"')
     print(jason_obj)
-    width = int(jason_obj['viewer.stream-width'])
-    height = int(jason_obj['viewer.stream-height'])
-    FPS = int(jason_obj['viewer.stream-fps'])
-
+    print(json_string)
+    width = int(jason_obj['viewer']['stream-width'])
+    height = int(jason_obj['viewer']['stream-height'])
+    FPS = int(jason_obj['viewer']['stream-fps'])
 
     # set output video encoding
     if args.format == 'mp4':
