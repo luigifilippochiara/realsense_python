@@ -35,8 +35,8 @@ def main(args):
     color_path = args.name + '_rgb.' + args.format
     depth_path = args.name + '_depth.' + args.format
     # set output video writers
-    colorwriter = cv2.VideoWriter(color_path, fourcc, FPS, (args.width, height), 1)
-    depthwriter = cv2.VideoWriter(depth_path, fourcc, FPS, (args.width, height), 1)
+    colorwriter = cv2.VideoWriter(color_path, fourcc, FPS, (width, height), 1)
+    depthwriter = cv2.VideoWriter(depth_path, fourcc, FPS, (width, height), 1)
 
     # define pipeline and its config
     pipeline = rs.pipeline()
