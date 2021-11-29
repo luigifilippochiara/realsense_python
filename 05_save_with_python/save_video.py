@@ -21,24 +21,36 @@ def get_parser():
 
 
 def main(args):
-
+    # set output video encoding
     if args.format == 'mp4':
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     elif args.format == 'avi':
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
-
+    # set output video names
     color_path = args.name + '_rgb.' + args.format
     depth_path = args.name + '_depth.' + args.format
+    # set output video writers
+    colorwriter = cv2.VideoWriter(color_path, fourcc, args.FPS, (args.width, args.height), 1)
+    depthwriter = cv2.VideoWriter(depth_path, fourcc, args.FPS, (args.width, args.height), 1)
 
+    # define pipeline and its config
     pipeline = rs.pipeline()
     config = rs.config()
     config.enable_stream(rs.stream.depth, args.width, args.height, rs.format.z16, args.FPS)
     config.enable_stream(rs.stream.color, args.width, args.height, rs.format.bgr8, args.FPS)
 
-    colorwriter = cv2.VideoWriter(color_path, fourcc, args.FPS, (args.width, args.height), 1)
-    depthwriter = cv2.VideoWriter(depth_path, fourcc, args.FPS, (args.width, args.height), 1)
+    pipe_profile = pipeline.start(config)
 
-    pipeline.start(config)
+    depth_sensor = pipe_profile.get_device().first_depth_sensor()
+    print("1", rs.option.visual_preset)
+    preset_range = depth_sensor.get_option_range(rs.option.visual_preset)
+    print('preset range:'+str(preset_range))
+
+    for i in range(int(preset_range.max)):
+        visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, i)
+        print(i, visual_preset)
+        if visual_preset == "High Accuracy":
+            depth_sensor.set_option(rs.option.visual_preset, i)
 
     try:
         while True:
@@ -51,7 +63,7 @@ def main(args):
                 print("Error, impossible to get the frame, make sure that the Intel Realsense camera is correctly connected")
                 continue
 
-            # Define some filters
+            # Define post-processing filters
             depth_to_disparity = rs.disparity_transform(True)
             spatial = rs.spatial_filter()
 
