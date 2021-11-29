@@ -70,10 +70,7 @@ def main(args):
     playback = profile.get_device().as_playback()
     playback.set_real_time(False)
     # duration in nano seconds
-    duration = int(playback.get_duration().total_seconds() * 1e9)
-    print("duration", duration)
-    last_pos = playback.get_position()
-    print("last_pos", last_pos)
+    duration = playback.get_duration().total_seconds() * 1e9
 
     try:
         # Create colorizer object
@@ -99,7 +96,6 @@ def main(args):
             # Render image in opencv window
             cv2.imshow('Depth', depth_color_image)
 
-            print(f"{curr_pos}/{duration}")
             if curr_pos >= duration:
                 print("End of recording reached")
                 break
