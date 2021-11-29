@@ -42,8 +42,7 @@ def get_args(parser):
 
 
 def main(args):
-    jason_path = "Custom.json"
-    jason_obj = json.load(open(jason_path))
+    jason_obj = json.load(open(args.json))
     json_string= str(jason_obj).replace("'", '\"')
     width = int(jsonObj['stream-width'])
     height = int(jsonObj['stream-height'])
