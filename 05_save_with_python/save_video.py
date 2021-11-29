@@ -7,7 +7,7 @@ import argparse
 def get_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--name', '-n', default='stream', type=str)
+        '--name', '-n', default='record', type=str)
     parser.add_argument(
         '--format', '-f', default='mp4', type=str, choices=['mp4', 'avi'])
     parser.add_argument(
@@ -16,6 +16,9 @@ def get_parser():
         '--height', default=720, type=int, choices=[720, 480, 360])
     parser.add_argument(
         '--FPS', '-fps', default=30, type=int, choices=[15, 25, 30, 60, 90])
+    parser.add_argument(
+        '--visual_preset', default="High Density", type=str, 
+        choices=["Custom", "Default", "Hand", "High Accuracy", "High Density"])
     return parser
 
 
@@ -42,15 +45,19 @@ def main(args):
     pipe_profile = pipeline.start(config)
 
     depth_sensor = pipe_profile.get_device().first_depth_sensor()
-    print("1", rs.option.visual_preset)
-    preset_range = depth_sensor.get_option_range(rs.option.visual_preset)
-    print('preset range:'+str(preset_range))
+    current_preset = depth_sensor.get_option(rs.option.visual_preset)
+    print(current_preset)
 
-    for i in range(int(preset_range.max)):
-        visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, i)
-        print(i, visual_preset)
-        if visual_preset == "High Accuracy":
-            depth_sensor.set_option(rs.option.visual_preset, i)
+
+    # print("1", rs.option.visual_preset)
+    # preset_range = depth_sensor.get_option_range(rs.option.visual_preset)
+    # print('preset range:'+str(preset_range))
+
+    # for i in range(int(preset_range.max)):
+    #     visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, i)
+    #     print(i, visual_preset)
+    #     if visual_preset == "High Accuracy":
+    #         depth_sensor.set_option(rs.option.visual_preset, i)
 
     try:
         while True:
