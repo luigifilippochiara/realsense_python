@@ -75,7 +75,7 @@ def main(args):
         value_max = 6
         colorizer.set_option(rs.option.min_distance, value_min)
         colorizer.set_option(rs.option.max_distance, value_max)
-        colorizer.set_option(RS2_OPTION_HISTOGRAM_EQUALIZATION_ENABLED, 0.f);
+        colorizer.set_option(rs.option.histogram_equalization_enabled, True)
 
         # Streaming loop
         while True:
