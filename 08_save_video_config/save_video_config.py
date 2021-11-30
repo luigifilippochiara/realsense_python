@@ -85,9 +85,10 @@ def main(args):
         colorizer.set_option(rs.option.histogram_equalization_enabled, True)
 
         # POST PROCESSING FILTERS
-        depth_to_disparity_filter = rs.disparity_transform(True)
-        spatial_filter = rs.spatial_filter()
-        threshold_filter = rs.threshold_filter(1, 2)
+        decimation_filter = rs.decimation_filter()
+        # depth_to_disparity_filter = rs.disparity_transform(True)
+        # spatial_filter = rs.spatial_filter()
+        threshold_filter = rs.threshold_filter(0, 1)
 
         # Streaming loop
         while True:
@@ -101,8 +102,10 @@ def main(args):
                 continue
 
             # Apply filters to the depth channel
-            filtered_depth = depth_to_disparity_filter.process(depth_frame)
-            filtered_depth = spatial_filter.process(filtered_depth)
+            filtered_depth = depth_frame
+            filtered_depth = decimation_filter.process(filtered_depth)
+            # filtered_depth = depth_to_disparity_filter.process(filtered_depth)
+            # filtered_depth = spatial_filter.process(filtered_depth)
             filtered_depth = threshold_filter.process(filtered_depth)
 
             # Apply colormap to show the depth of the Objects
