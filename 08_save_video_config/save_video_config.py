@@ -71,6 +71,7 @@ def main(args):
 
     depth_sensor.set_option(rs.option.enable_auto_exposure, True)
     depth_sensor.set_option(rs.option.emitter_enabled, 1)  # 1=Laser is the default
+    depth_sensor.set_option(rs.option.hdr_enabled, True)  # HDR merge
 
     try:
         # COLORMAPS
@@ -85,11 +86,12 @@ def main(args):
         colorizer.set_option(rs.option.histogram_equalization_enabled, True)
 
         # POST PROCESSING FILTERS
-        decimation_filter = rs.decimation_filter(magnitude=2)
-        # depth_to_disparity_filter = rs.disparity_transform(True)
+        decimation_filter = rs.decimation_filter(magnitude=1)  # Performs downsampling by using the median with specific kernel size
+        threshold_filter = rs.threshold_filter(min_dist=0.5, max_dist=3)  # filter out depth values that are either too large or too small, as a software post-processing step
+        depth_to_disparity_filter = rs.disparity_transform(True)
         # spatial_filter = rs.spatial_filter()
-        threshold_filter = rs.threshold_filter(
-            min_dist=value_min, max_dist=value_max)
+        disparity_to_depth_filter = rs.disparity_transform(False)
+        
 
         # Streaming loop
         while True:
@@ -105,10 +107,12 @@ def main(args):
             # Apply filters to the depth channel
             filtered_depth = depth_frame
             filtered_depth = decimation_filter.process(filtered_depth)
-            # filtered_depth = depth_to_disparity_filter.process(filtered_depth)
-            # filtered_depth = spatial_filter.process(filtered_depth)
             filtered_depth = threshold_filter.process(filtered_depth)
-
+            filtered_depth = depth_to_disparity_filter.process(filtered_depth)
+            # filtered_depth = spatial_filter.process(filtered_depth)
+            filtered_depth = disparity_to_depth_filter.process(filtered_depth)
+            
+            
             # Apply colormap to show the depth of the Objects
             depth_colormap = np.asanyarray(colorizer.colorize(filtered_depth).get_data())
             # Convert images to numpy arrays
