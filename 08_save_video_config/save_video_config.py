@@ -71,7 +71,7 @@ def main(args):
 
     depth_sensor.set_option(rs.option.enable_auto_exposure, True)
     depth_sensor.set_option(rs.option.emitter_enabled, 1)  # 1=Laser is the default
-    # depth_sensor.set_option(rs.option.hdr_enabled, True)  # HDR merge
+    # depth_sensor.set_option(rs.option.hdr_enabled, True)  # DO NOT USE, it makes the image flash
 
     try:
         # COLORMAPS
@@ -106,11 +106,11 @@ def main(args):
 
             # Apply filters to the depth channel
             filtered_depth = depth_frame
-            # filtered_depth = decimation_filter.process(filtered_depth)
+            filtered_depth = decimation_filter.process(filtered_depth)
             filtered_depth = threshold_filter.process(filtered_depth)
-            #filtered_depth = depth_to_disparity_filter.process(filtered_depth)
+            filtered_depth = depth_to_disparity_filter.process(filtered_depth)
             # filtered_depth = spatial_filter.process(filtered_depth)
-            #filtered_depth = disparity_to_depth_filter.process(filtered_depth)
+            filtered_depth = disparity_to_depth_filter.process(filtered_depth)
             
 
             # Apply colormap to show the depth of the Objects
