@@ -13,6 +13,9 @@ def get_parser():
         '--format', '-f', default='mp4', type=str, choices=['mp4', 'avi'])
     parser.add_argument(
         '--json', '-j', default='config.json', type=str, help="Path to the json config file")
+    parser.add_argument(
+        '--visual_preset', default="High Density", type=str, 
+        choices=["Custom", "Default", "Hand", "High Accuracy", "High Density"])
 
     return parser
 
@@ -49,6 +52,19 @@ def main(args):
     device = pipe_profile.get_device()
     advnc_mode = rs.rs400_advanced_mode(device)
     advnc_mode.load_json(json_string)
+
+    depth_sensor = device.first_depth_sensor()
+
+    # set visual preset
+    preset_range = depth_sensor.get_option_range(rs.option.visual_preset)
+    for i in range(int(preset_range.max)):
+        visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, i)
+        if visual_preset == args.visual_preset:
+            depth_sensor.set_option(rs.option.visual_preset, i)
+
+    current_preset = depth_sensor.get_option(rs.option.visual_preset)
+    current_visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, current_preset)
+    print("Visual preset", current_visual_preset)
 
     try:
         # Streaming loop
