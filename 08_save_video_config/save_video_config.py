@@ -55,7 +55,7 @@ def main(args):
 
     depth_sensor = device.first_depth_sensor()
 
-    # set visual preset -- High Density is 
+    # set visual preset -- 0=Custom, 1=Default, 2=Hand, 3=High Accuracy, 4=High Density
     preset_range = depth_sensor.get_option_range(rs.option.visual_preset)
     for i in range(int(preset_range.max)):
         visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, i)
@@ -65,15 +65,15 @@ def main(args):
 
     current_preset = depth_sensor.get_option(rs.option.visual_preset)
     current_visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, current_preset)
-    print("Visual preset", current_visual_preset)
+    print("Depth visual preset:", current_visual_preset)
 
     try:
-        # create colormap to show the depth of the Objects
+        # create colormap to show the depth of the objects
         colorizer = rs.colorizer()
         colorizer.set_option(rs.option.color_scheme, 0)  # 0 is Jet
         colorizer.set_option(rs.option.visual_preset, 1)  # 0=Dynamic, 1=Fixed, 2=Near, 3=Far
-        value_min = 0
-        value_max = 4
+        value_min = 1
+        value_max = 2
         colorizer.set_option(rs.option.min_distance, value_min)
         colorizer.set_option(rs.option.max_distance, value_max)
 
