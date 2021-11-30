@@ -55,10 +55,11 @@ def main(args):
 
     depth_sensor = device.first_depth_sensor()
 
-    # set visual preset
+    # set visual preset -- High Density is 
     preset_range = depth_sensor.get_option_range(rs.option.visual_preset)
     for i in range(int(preset_range.max)):
         visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, i)
+        print(i, visual_preset)
         if visual_preset == args.visual_preset:
             depth_sensor.set_option(rs.option.visual_preset, i)
 
@@ -67,6 +68,14 @@ def main(args):
     print("Visual preset", current_visual_preset)
 
     try:
+        # create colormap to show the depth of the Objects
+        colorizer = rs.colorizer()
+        colorizer.set_option(rs.option.color_scheme, 0)  # 0 is Jet
+        colorizer.set_option(rs.option.visual_preset, 1)  # 0=Dynamic, 1=Fixed, 2=Near, 3=Far
+        value_min=0, value_max = 0, 4
+        colorizer.set_option(rs.option.min_distance, value_min)
+        colorizer.set_option(rs.option.max_distance, value_max)
+
         # Streaming loop
         while True:
             frames = pipeline.wait_for_frames()
@@ -86,8 +95,7 @@ def main(args):
             # filtered_depth = depth_to_disparity.process(depth_frame)
             # filtered_depth = spatial.process(filtered_depth)
 
-            # Create colormap to show the depth of the Objects
-            colorizer = rs.colorizer()
+            # Apply colormap to show the depth of the Objects
             depth_colormap = np.asanyarray(colorizer.colorize(depth_frame).get_data())
 
             # Convert images to numpy arrays
