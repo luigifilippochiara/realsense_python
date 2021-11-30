@@ -108,11 +108,11 @@ def main(args):
             filtered_depth = depth_frame
             filtered_depth = decimation_filter.process(filtered_depth)
             filtered_depth = threshold_filter.process(filtered_depth)
-            filtered_depth = depth_to_disparity_filter.process(filtered_depth)
+            #filtered_depth = depth_to_disparity_filter.process(filtered_depth)
             # filtered_depth = spatial_filter.process(filtered_depth)
-            filtered_depth = disparity_to_depth_filter.process(filtered_depth)
+            #filtered_depth = disparity_to_depth_filter.process(filtered_depth)
             
-            
+
             # Apply colormap to show the depth of the Objects
             depth_colormap = np.asanyarray(colorizer.colorize(filtered_depth).get_data())
             # Convert images to numpy arrays
