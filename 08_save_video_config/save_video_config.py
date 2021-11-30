@@ -70,7 +70,7 @@ def main(args):
 
     emitter = depth_sensor.get_option(rs.option.emitter_enabled)
     print("emitter = ", emitter)
-    set_emitter = 0
+    set_emitter = 2
     depth_sensor.set_option(rs.option.emitter_enabled, set_emitter)
     emitter1 = depth_sensor.get_option(rs.option.emitter_enabled)
     print("new emitter = ", emitter1)
