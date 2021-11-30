@@ -66,6 +66,15 @@ def main(args):
     current_visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, current_preset)
     print("Depth visual preset:", current_visual_preset)
 
+    depth_sensor.set_option(rs.option.enable_auto_exposure, True)
+
+    emitter = depth_sensor.get_option(rs.option.emitter_enabled)
+    print("emitter = ", emitter)
+    set_emitter = 0
+    depth_sensor.set_option(rs.option.emitter_enabled, set_emitter)
+    emitter1 = depth_sensor.get_option(rs.option.emitter_enabled)
+    print("new emitter = ", emitter1)
+
     try:
         # create colormap to show the depth of the objects
         colorizer = rs.colorizer()
