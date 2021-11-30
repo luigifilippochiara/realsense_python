@@ -71,7 +71,7 @@ def main(args):
 
     depth_sensor.set_option(rs.option.enable_auto_exposure, True)
     depth_sensor.set_option(rs.option.emitter_enabled, 1)  # 1=Laser is the default
-    depth_sensor.set_option(rs.option.hdr_enabled, True)  # HDR merge
+    # depth_sensor.set_option(rs.option.hdr_enabled, True)  # HDR merge
 
     try:
         # COLORMAPS
