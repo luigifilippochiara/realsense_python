@@ -106,7 +106,7 @@ def main(args):
 
             # Apply filters to the depth channel
             filtered_depth = depth_frame
-            filtered_depth = decimation_filter.process(filtered_depth)
+            # filtered_depth = decimation_filter.process(filtered_depth)
             filtered_depth = threshold_filter.process(filtered_depth)
             #filtered_depth = depth_to_disparity_filter.process(filtered_depth)
             # filtered_depth = spatial_filter.process(filtered_depth)
