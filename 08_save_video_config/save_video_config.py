@@ -89,7 +89,7 @@ def main(args):
         decimation_filter = rs.decimation_filter(magnitude=1)  # Performs downsampling by using the median with specific kernel size
         threshold_filter = rs.threshold_filter(min_dist=0, max_dist=6)  # filter out depth values that are either too large or too small, as a software post-processing step
         depth_to_disparity_filter = rs.disparity_transform(transform_to_disparity=True)  # Converts from depth representation to disparity representation and vice
-        spatial_filter = rs.spatial_filter(smooth_alpha=0.5, smooth_delta=20, magnitude=2, hole_fill=0)
+        spatial_filter = rs.spatial_filter(smooth_alpha=0.5, smooth_delta=20, magnitude=2, hole_fill=2)
         # Spatial filter smooths the image by calculating frame with 
         # alpha and delta settings. Alpha defines the weight of the current 
         # pixel for smoothing, and is bounded within [25..100]%. Delta 
@@ -112,12 +112,12 @@ def main(args):
 
             # Apply filters to the depth channel
             filtered_depth = depth_frame
-            # filtered_depth = decimation_filter.process(filtered_depth)
-            # filtered_depth = threshold_filter.process(filtered_depth)
-            # filtered_depth = depth_to_disparity_filter.process(filtered_depth)
-            # filtered_depth = spatial_filter.process(filtered_depth)
-            # # filtered_depth = temporal_filter.process(filtered_depth)
-            # filtered_depth = disparity_to_depth_filter.process(filtered_depth)
+            filtered_depth = decimation_filter.process(filtered_depth)
+            filtered_depth = threshold_filter.process(filtered_depth)
+            filtered_depth = depth_to_disparity_filter.process(filtered_depth)
+            filtered_depth = spatial_filter.process(filtered_depth)
+            # filtered_depth = temporal_filter.process(filtered_depth)
+            filtered_depth = disparity_to_depth_filter.process(filtered_depth)
             
 
             # Apply colormap to show the depth of the Objects
