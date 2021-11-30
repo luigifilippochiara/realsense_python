@@ -86,7 +86,7 @@ def main(args):
         colorizer.set_option(rs.option.histogram_equalization_enabled, True)
 
         # POST PROCESSING FILTERS
-        decimation_filter = rs.decimation_filter(magnitude=1)  # Performs downsampling by using the median with specific kernel size
+        decimation_filter = rs.decimation_filter(magnitude=2)  # Performs downsampling by using the median with specific kernel size
         threshold_filter = rs.threshold_filter(min_dist=0, max_dist=6)  # filter out depth values that are either too large or too small, as a software post-processing step
         depth_to_disparity_filter = rs.disparity_transform(transform_to_disparity=True)  # Converts from depth representation to disparity representation and vice
         spatial_filter = rs.spatial_filter(smooth_alpha=0.5, smooth_delta=20, magnitude=2, hole_fill=2)
