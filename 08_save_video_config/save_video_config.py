@@ -85,10 +85,10 @@ def main(args):
         colorizer.set_option(rs.option.histogram_equalization_enabled, True)
 
         # POST PROCESSING FILTERS
-        decimation_filter = rs.decimation_filter()
+        decimation_filter = rs.decimation_filter(magnitude=1)
         # depth_to_disparity_filter = rs.disparity_transform(True)
         # spatial_filter = rs.spatial_filter()
-        threshold_filter = rs.threshold_filter(0, 1)
+        threshold_filter = rs.threshold_filter(min_dist=2, max_dist=3)
 
         # Streaming loop
         while True:
