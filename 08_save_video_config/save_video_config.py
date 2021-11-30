@@ -72,9 +72,10 @@ def main(args):
         colorizer.set_option(rs.option.color_scheme, 0)  # 0 is Jet
         colorizer.set_option(rs.option.visual_preset, 1)  # 0=Dynamic, 1=Fixed, 2=Near, 3=Far
         value_min = 0
-        value_max = 4
+        value_max = 6
         colorizer.set_option(rs.option.min_distance, value_min)
         colorizer.set_option(rs.option.max_distance, value_max)
+        colorizer.set_option(RS2_OPTION_HISTOGRAM_EQUALIZATION_ENABLED, 0.f);
 
         # Streaming loop
         while True:
