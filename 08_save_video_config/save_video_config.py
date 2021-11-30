@@ -86,7 +86,7 @@ def main(args):
         colorizer.set_option(rs.option.histogram_equalization_enabled, True)
 
         # POST PROCESSING FILTERS
-        decimation_filter = rs.decimation_filter(magnitude=2)  # Performs downsampling by using the median with specific kernel size
+        decimation_filter = rs.decimation_filter(magnitude=1)  # Performs downsampling by using the median with specific kernel size
         threshold_filter = rs.threshold_filter(min_dist=0, max_dist=6)  # filter out depth values that are either too large or too small, as a software post-processing step
         depth_to_disparity_filter = rs.disparity_transform(transform_to_disparity=True)  # Converts from depth representation to disparity representation and vice
         spatial_filter = rs.spatial_filter(smooth_alpha=0.5, smooth_delta=20, magnitude=2, hole_fill=2)
@@ -95,7 +95,11 @@ def main(args):
         # pixel for smoothing, and is bounded within [25..100]%. Delta 
         # defines the depth gradient below which the smoothing will occur 
         # as number of depth levels.
-        # temporal_filter = rs.temporal_filter()
+        temporal_filter = rs.temporal_filter(smooth_alpha=0.4, smooth_delta=20, persistence_control=3)  # persistence_control=3 - Valid in 2 / last 4 - Activated if the pixel was valid in two out of the last 4 frames
+        # Temporal filter smooths the image by calculating multiple frames 
+        # with alpha and delta settings. Alpha defines the weight of 
+        # current frame, and delta defines thethreshold for edge 
+        # classification and preserving.
         disparity_to_depth_filter = rs.disparity_transform(transform_to_disparity=False)  # Converts from depth representation to disparity representation and vice
         
 
@@ -116,7 +120,7 @@ def main(args):
             filtered_depth = threshold_filter.process(filtered_depth)
             filtered_depth = depth_to_disparity_filter.process(filtered_depth)
             filtered_depth = spatial_filter.process(filtered_depth)
-            # filtered_depth = temporal_filter.process(filtered_depth)
+            filtered_depth = temporal_filter.process(filtered_depth)
             filtered_depth = disparity_to_depth_filter.process(filtered_depth)
             
 
