@@ -48,11 +48,14 @@ def main(args):
     config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, FPS)
 
     pipe_profile = pipeline.start(config)
-
     device = pipe_profile.get_device()
+
+    # Load advanced controls settings
     advnc_mode = rs.rs400_advanced_mode(device)
     advnc_mode.load_json(json_string)
 
+    # DEPTH SENSOR CONFIGURATION
+    # these are the stereo module main parameters
     depth_sensor = device.first_depth_sensor()
 
     # set visual preset -- 0=Custom, 1=Default, 2=Hand, 3=High Accuracy, 4=High Density
@@ -67,16 +70,11 @@ def main(args):
     print("Depth visual preset:", current_visual_preset)
 
     depth_sensor.set_option(rs.option.enable_auto_exposure, True)
-
-    emitter = depth_sensor.get_option(rs.option.emitter_enabled)
-    print("emitter = ", emitter)
-    set_emitter = 2
-    depth_sensor.set_option(rs.option.emitter_enabled, set_emitter)
-    emitter1 = depth_sensor.get_option(rs.option.emitter_enabled)
-    print("new emitter = ", emitter1)
+    depth_sensor.set_option(rs.option.emitter_enabled, 1)  # 1=Laser is the default
 
     try:
-        # create colormap to show the depth of the objects
+        # COLORMAPS
+        # these are the depth visualization parameters
         colorizer = rs.colorizer()
         colorizer.set_option(rs.option.color_scheme, 0)  # 0 is Jet
         colorizer.set_option(rs.option.visual_preset, 1)  # 0=Dynamic, 1=Fixed, 2=Near, 3=Far
@@ -85,6 +83,11 @@ def main(args):
         colorizer.set_option(rs.option.min_distance, value_min)
         colorizer.set_option(rs.option.max_distance, value_max)
         colorizer.set_option(rs.option.histogram_equalization_enabled, True)
+
+        # POST PROCESSING FILTERS
+        depth_to_disparity = rs.disparity_transform(True)
+        spatial_filter = rs.spatial_filter()
+        threshold_filter = rs.threshold_filter(1, 2)
 
         # Streaming loop
         while True:
@@ -97,17 +100,13 @@ def main(args):
                 print("Error, impossible to get the frame, make sure that the Intel Realsense camera is correctly connected")
                 continue
 
-            # # Define post-processing filters
-            # depth_to_disparity = rs.disparity_transform(True)
-            # spatial = rs.spatial_filter()
-
-            # # Apply filters to the depth channel
-            # filtered_depth = depth_to_disparity.process(depth_frame)
-            # filtered_depth = spatial.process(filtered_depth)
+            # Apply filters to the depth channel
+            filtered_depth = depth_to_disparity.process(depth_frame)
+            filtered_depth = spatial.process(filtered_depth)
+            filtered_depth = threshold_filter.process(filtered_depth)
 
             # Apply colormap to show the depth of the Objects
-            depth_colormap = np.asanyarray(colorizer.colorize(depth_frame).get_data())
-
+            depth_colormap = np.asanyarray(colorizer.colorize(filtered_depth).get_data())
             # Convert images to numpy arrays
             color_image = np.asanyarray(color_frame.get_data())
 
