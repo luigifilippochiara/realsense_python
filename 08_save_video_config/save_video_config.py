@@ -101,7 +101,6 @@ def main(args):
         # current frame, and delta defines thethreshold for edge 
         # classification and preserving.
         disparity_to_depth_filter = rs.disparity_transform(transform_to_disparity=False)  # Converts from depth representation to disparity representation and vice
-        
 
         # Streaming loop
         while True:
@@ -122,7 +121,6 @@ def main(args):
             filtered_depth = spatial_filter.process(filtered_depth)
             filtered_depth = temporal_filter.process(filtered_depth)
             filtered_depth = disparity_to_depth_filter.process(filtered_depth)
-            
 
             # Apply colormap to show the depth of the Objects
             depth_colormap = np.asanyarray(colorizer.colorize(filtered_depth).get_data())
