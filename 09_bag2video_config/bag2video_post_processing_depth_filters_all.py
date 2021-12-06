@@ -1,0 +1,195 @@
+"""
+Load a recorded .bag streams, and save 
+the depth stream as a video file.
+"""
+
+
+import pyrealsense2 as rs
+import numpy as np
+import cv2
+import os
+import json
+import argparse
+
+
+def get_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--path', '-p', default='../../../Documents/realsense_bag_files', type=str, help="Path to the bag files folder")
+    parser.add_argument(
+        '--format', '-f', default='mp4', type=str, choices=['mp4', 'avi'])
+    parser.add_argument(
+        '--json', '-j', default='../config.json', type=str, help="Path to the json config file")
+    # parser.add_argument(
+    #     '--visual_preset', default="High Accuracy", type=str, 
+    #     choices=["Custom", "Default", "Hand", "High Accuracy", "High Density"])
+
+    return parser
+
+
+def get_args(parser):
+    # Parse the command line arguments to an object
+    args = parser.parse_args()
+    
+    # Safety if no parameter have been given
+    if not args.path:
+        print("No path paramater have been given.")
+        print("For help type --help")
+        exit()
+    return args
+
+
+def main(args):
+    
+    # json config
+    json_path = args.json
+    jason_obj = json.load(open(json_path))
+    json_string= str(jason_obj).replace("'", '\"')
+    width = int(jason_obj['viewer']['stream-width'])
+    height = int(jason_obj['viewer']['stream-height'])
+    FPS = int(jason_obj['viewer']['stream-fps'])
+
+    # set output video encoding
+    if args.format == 'mp4':
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    elif args.format == 'avi':
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    
+    for filename in os.listdir(args.path):
+        
+        output_name = os.path.splitext(filename)[0]
+        # Check if the file has bag extension
+        if os.path.splitext(filename)[1] != ".bag":
+            print("The given file is not of correct file format.")
+            print("Only .bag files are accepted")
+            exit()
+        
+        # set output video names
+        depth_path = output_name + '_depth.' + args.format
+        # set output video writers
+        depthwriter = cv2.VideoWriter(depth_path, fourcc, FPS, (width, height), 1)
+
+        # Create pipeline
+        pipeline = rs.pipeline()
+        # Create a config object
+        config = rs.config()
+        # Tell config that we will use a recorded device from file to be used by the pipeline through playback.
+        config.enable_device_from_file(os.path.join(args.path, filename), repeat_playback=False)
+        # Configure the pipeline to stream the depth stream
+        # REMEMBER that width, height and FPS should be the same of the recorded stream
+        config.enable_stream(rs.stream.depth, width, height, rs.format.z16, FPS)
+
+        # Start streaming from file
+        profile = pipeline.start(config)
+        device = profile.get_device()
+
+        # Playback is used to find duration of recorded video
+        playback = device.as_playback()
+        playback.set_real_time(False)
+        # duration in nano seconds
+        duration = playback.get_duration().total_seconds() * 1e9
+
+        # Load advanced controls settings
+        # advnc_mode = rs.rs400_advanced_mode(device)
+        # advnc_mode.load_json(json_string)
+
+        # DEPTH SENSOR CONFIGURATION
+        # these are the stereo module main parameters
+        depth_sensor = device.first_depth_sensor()
+
+        # # set visual preset -- 0=Custom, 1=Default, 2=Hand, 3=High Accuracy, 4=High Density
+        # preset_range = depth_sensor.get_option_range(rs.option.visual_preset)
+        # for i in range(int(preset_range.max)):
+        #     visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, i)
+        #     if visual_preset == args.visual_preset:
+        #         depth_sensor.set_option(rs.option.visual_preset, i)
+
+        # current_preset = depth_sensor.get_option(rs.option.visual_preset)
+        # current_visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, current_preset)
+        # print("Depth visual preset:", current_visual_preset)
+
+        # depth_sensor.set_option(rs.option.enable_auto_exposure, True)
+        # depth_sensor.set_option(rs.option.emitter_enabled, 1)  # 1=Laser is the default
+        # depth_sensor.set_option(rs.option.hdr_enabled, True)  # DO NOT USE, it makes the image flash
+
+        try:
+            # COLORMAPS
+            # these are the depth visualization parameters
+            colorizer = rs.colorizer()
+            colorizer.set_option(rs.option.color_scheme, 0)  # 0 is Jet
+            # colorizer.set_option(rs.option.visual_preset, 1)  # 0=Dynamic, 1=Fixed, 2=Near, 3=Far
+            value_min = 0
+            value_max = 6
+            colorizer.set_option(rs.option.min_distance, value_min)
+            colorizer.set_option(rs.option.max_distance, value_max)
+            colorizer.set_option(rs.option.histogram_equalization_enabled, True)
+
+            # POST PROCESSING FILTERS
+            decimation_filter = rs.decimation_filter(magnitude=1)  # Performs downsampling by using the median with specific kernel size
+            threshold_filter = rs.threshold_filter(min_dist=0, max_dist=5.2)  # filter out depth values that are either too large or too small, as a software post-processing step
+            depth_to_disparity_filter = rs.disparity_transform(transform_to_disparity=True)  # Converts from depth representation to disparity representation and vice
+            spatial_filter = rs.spatial_filter(smooth_alpha=0.5, smooth_delta=20, magnitude=2, hole_fill=2)
+            # Spatial filter smooths the image by calculating frame with 
+            # alpha and delta settings. Alpha defines the weight of the current 
+            # pixel for smoothing, and is bounded within [25..100]%. Delta 
+            # defines the depth gradient below which the smoothing will occur 
+            # as number of depth levels.
+            temporal_filter = rs.temporal_filter(smooth_alpha=0.4, smooth_delta=20, persistence_control=3)  # persistence_control=3 - Valid in 2 / last 4 - Activated if the pixel was valid in two out of the last 4 frames
+            # Temporal filter smooths the image by calculating multiple frames 
+            # with alpha and delta settings. Alpha defines the weight of 
+            # current frame, and delta defines thethreshold for edge 
+            # classification and preserving.
+            disparity_to_depth_filter = rs.disparity_transform(transform_to_disparity=False)  # Converts from depth representation to disparity representation and vice
+
+
+            # Streaming loop
+            while True:
+                # Get frameset
+                frames = pipeline.wait_for_frames()
+                curr_pos = playback.get_position()
+                
+                # DEPTH
+                depth_frame = frames.get_depth_frame()
+                if not depth_frame:
+                    print("No depth_frame")
+                    continue
+                
+                # Apply filters to the depth channel
+                filtered_depth = depth_frame
+                filtered_depth = decimation_filter.process(filtered_depth)
+                filtered_depth = threshold_filter.process(filtered_depth)
+                filtered_depth = depth_to_disparity_filter.process(filtered_depth)
+                filtered_depth = spatial_filter.process(filtered_depth)
+                filtered_depth = temporal_filter.process(filtered_depth)
+                filtered_depth = disparity_to_depth_filter.process(filtered_depth)
+
+                # Colorize depth frame to jet colormap
+                depth_color_frame = colorizer.colorize(filtered_depth)
+                # Convert depth_frame to numpy array to render image in opencv
+                depth_color_image = np.asanyarray(depth_color_frame.get_data())
+                # Save to disk
+                depthwriter.write(depth_color_image)
+                # Render image in opencv window
+                cv2.imshow('Depth', depth_color_image)
+
+                print("Progress:", f"{curr_pos}/{duration}")
+                if curr_pos >= duration:
+                    print("End of recording reached")
+                    break
+
+                # if pressed escape exit program
+                if cv2.waitKey(1) in [27, ord("q")]:
+                    break
+        finally:
+            cv2.destroyAllWindows()
+            depthwriter.release()
+            pipeline.stop()
+            print(filename + " done!")
+
+
+if __name__ == '__main__':
+    parser = get_parser()
+    args = get_args(parser)
+    print(args)
+    main(args)
+

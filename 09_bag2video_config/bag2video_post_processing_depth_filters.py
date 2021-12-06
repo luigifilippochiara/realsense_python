@@ -1,18 +1,27 @@
+"""
+Load a recorded .bag streams, and save 
+the depth stream as a video file.
+"""
+
+
 import pyrealsense2 as rs
 import numpy as np
 import cv2
-import argparse
+import os
 import json
-import time
+import argparse
+
 
 def get_parser():
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--input', '-i', default='record.bag', type=str, help="Path to the bag file")
     parser.add_argument(
         '--name', '-n', default='record', type=str)
     parser.add_argument(
         '--format', '-f', default='mp4', type=str, choices=['mp4', 'avi'])
     parser.add_argument(
-        '--json', '-j', default='config.json', type=str, help="Path to the json config file")
+        '--json', '-j', default='../config.json', type=str, help="Path to the json config file")
     parser.add_argument(
         '--visual_preset', default="High Accuracy", type=str, 
         choices=["Custom", "Default", "Hand", "High Accuracy", "High Density"])
@@ -20,7 +29,25 @@ def get_parser():
     return parser
 
 
+def get_args(parser):
+    # Parse the command line arguments to an object
+    args = parser.parse_args()
+    
+    # Safety if no parameter have been given
+    if not args.input:
+        print("No input paramater have been given.")
+        print("For help type --help")
+        exit()
+    # Check if the given file have bag extension
+    if os.path.splitext(args.input)[1] != ".bag":
+        print("The given file is not of correct file format.")
+        print("Only .bag files are accepted")
+        exit()
+    return args
+
+
 def main(args):
+    
     # json config
     json_path = args.json
     jason_obj = json.load(open(json_path))
@@ -35,24 +62,33 @@ def main(args):
     elif args.format == 'avi':
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
     # set output video names
-    color_path = args.name + '_rgb.' + args.format
     depth_path = args.name + '_depth.' + args.format
     # set output video writers
-    colorwriter = cv2.VideoWriter(color_path, fourcc, FPS, (width, height), 1)
     depthwriter = cv2.VideoWriter(depth_path, fourcc, FPS, (width, height), 1)
 
-    # define pipeline and its config
+    # Create pipeline
     pipeline = rs.pipeline()
+    # Create a config object
     config = rs.config()
+    # Tell config that we will use a recorded device from file to be used by the pipeline through playback.
+    config.enable_device_from_file(args.input, repeat_playback=False)
+    # Configure the pipeline to stream the depth stream
+    # REMEMBER that width, height and FPS should be the same of the recorded stream
     config.enable_stream(rs.stream.depth, width, height, rs.format.z16, FPS)
-    config.enable_stream(rs.stream.color, width, height, rs.format.bgr8, FPS)
 
-    pipe_profile = pipeline.start(config)
-    device = pipe_profile.get_device()
+    # Start streaming from file
+    profile = pipeline.start(config)
+    device = profile.get_device()
+
+    # Playback is used to find duration of recorded video
+    playback = device.as_playback()
+    playback.set_real_time(False)
+    # duration in nano seconds
+    duration = playback.get_duration().total_seconds() * 1e9
 
     # Load advanced controls settings
-    advnc_mode = rs.rs400_advanced_mode(device)
-    advnc_mode.load_json(json_string)
+    # advnc_mode = rs.rs400_advanced_mode(device)
+    # advnc_mode.load_json(json_string)
 
     # DEPTH SENSOR CONFIGURATION
     # these are the stereo module main parameters
@@ -69,8 +105,8 @@ def main(args):
     current_visual_preset = depth_sensor.get_option_value_description(rs.option.visual_preset, current_preset)
     print("Depth visual preset:", current_visual_preset)
 
-    depth_sensor.set_option(rs.option.enable_auto_exposure, True)
-    depth_sensor.set_option(rs.option.emitter_enabled, 1)  # 1=Laser is the default
+    # depth_sensor.set_option(rs.option.enable_auto_exposure, True)
+    # depth_sensor.set_option(rs.option.emitter_enabled, 1)  # 1=Laser is the default
     # depth_sensor.set_option(rs.option.hdr_enabled, True)  # DO NOT USE, it makes the image flash
 
     try:
@@ -102,18 +138,19 @@ def main(args):
         # classification and preserving.
         disparity_to_depth_filter = rs.disparity_transform(transform_to_disparity=False)  # Converts from depth representation to disparity representation and vice
 
+
         # Streaming loop
         while True:
-            
+            # Get frameset
             frames = pipeline.wait_for_frames()
-            depth_frame = frames.get_depth_frame()
-            color_frame = frames.get_color_frame()
+            curr_pos = playback.get_position()
             
-            if not depth_frame or not color_frame:
-                # If there is no frame, probably camera not connected, return False
-                print("Error, impossible to get the frame, make sure that the Intel Realsense camera is correctly connected")
+            # DEPTH
+            depth_frame = frames.get_depth_frame()
+            if not depth_frame:
+                print("No depth_frame")
                 continue
-
+            
             # Apply filters to the depth channel
             filtered_depth = depth_frame
             filtered_depth = decimation_filter.process(filtered_depth)
@@ -123,31 +160,33 @@ def main(args):
             # filtered_depth = temporal_filter.process(filtered_depth)
             filtered_depth = disparity_to_depth_filter.process(filtered_depth)
 
-            # Apply colormap to show the depth of the Objects
-            depth_colormap = np.asanyarray(colorizer.colorize(filtered_depth).get_data())
-            # Convert images to numpy arrays
-            color_image = np.asanyarray(color_frame.get_data())
-
+            # Colorize depth frame to jet colormap
+            depth_color_frame = colorizer.colorize(filtered_depth)
+            # Convert depth_frame to numpy array to render image in opencv
+            depth_color_image = np.asanyarray(depth_color_frame.get_data())
             # Save to disk
-            colorwriter.write(color_image)
-            depthwriter.write(depth_colormap)
-             
-            # Show to screen
-            cv2.imshow('RGB', color_image)
-            cv2.imshow('Depth', depth_colormap)
-            
+            depthwriter.write(depth_color_image)
+            # Render image in opencv window
+            cv2.imshow('Depth', depth_color_image)
+
+            print("Progress:", f"{curr_pos}/{duration}")
+            if curr_pos >= duration:
+                print("End of recording reached")
+                break
+
             # if pressed escape exit program
             if cv2.waitKey(1) in [27, ord("q")]:
                 break
     finally:
         cv2.destroyAllWindows()
-        colorwriter.release()
         depthwriter.release()
         pipeline.stop()
+        print("Done.")
+
 
 if __name__ == '__main__':
     parser = get_parser()
-    args = parser.parse_args()
+    args = get_args(parser)
     print(args)
     main(args)
 

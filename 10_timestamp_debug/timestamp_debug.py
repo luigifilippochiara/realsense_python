@@ -86,51 +86,58 @@ def main(args):
         colorizer.set_option(rs.option.histogram_equalization_enabled, True)
 
         # POST PROCESSING FILTERS
-        decimation_filter = rs.decimation_filter(magnitude=1)  # Performs downsampling by using the median with specific kernel size
-        threshold_filter = rs.threshold_filter(min_dist=0, max_dist=5.2)  # filter out depth values that are either too large or too small, as a software post-processing step
-        depth_to_disparity_filter = rs.disparity_transform(transform_to_disparity=True)  # Converts from depth representation to disparity representation and vice
-        spatial_filter = rs.spatial_filter(smooth_alpha=0.5, smooth_delta=20, magnitude=2, hole_fill=2)
+        # decimation_filter = rs.decimation_filter(magnitude=1)  # Performs downsampling by using the median with specific kernel size
+        # threshold_filter = rs.threshold_filter(min_dist=0, max_dist=5.2)  # filter out depth values that are either too large or too small, as a software post-processing step
+        # depth_to_disparity_filter = rs.disparity_transform(transform_to_disparity=True)  # Converts from depth representation to disparity representation and vice
+        # spatial_filter = rs.spatial_filter(smooth_alpha=0.5, smooth_delta=20, magnitude=2, hole_fill=2)
         # Spatial filter smooths the image by calculating frame with 
         # alpha and delta settings. Alpha defines the weight of the current 
         # pixel for smoothing, and is bounded within [25..100]%. Delta 
         # defines the depth gradient below which the smoothing will occur 
         # as number of depth levels.
-        temporal_filter = rs.temporal_filter(smooth_alpha=0.4, smooth_delta=20, persistence_control=3)  # persistence_control=3 - Valid in 2 / last 4 - Activated if the pixel was valid in two out of the last 4 frames
+        # temporal_filter = rs.temporal_filter(smooth_alpha=0.4, smooth_delta=20, persistence_control=3)  # persistence_control=3 - Valid in 2 / last 4 - Activated if the pixel was valid in two out of the last 4 frames
         # Temporal filter smooths the image by calculating multiple frames 
         # with alpha and delta settings. Alpha defines the weight of 
         # current frame, and delta defines thethreshold for edge 
         # classification and preserving.
-        disparity_to_depth_filter = rs.disparity_transform(transform_to_disparity=False)  # Converts from depth representation to disparity representation and vice
+        # disparity_to_depth_filter = rs.disparity_transform(transform_to_disparity=False)  # Converts from depth representation to disparity representation and vice
 
+        timestamps_file = open(args.name + ".txt", "a")
         # Streaming loop
         while True:
             
             frames = pipeline.wait_for_frames()
             depth_frame = frames.get_depth_frame()
             color_frame = frames.get_color_frame()
+            previous_timestamp = time.time()
             
             if not depth_frame or not color_frame:
                 # If there is no frame, probably camera not connected, return False
                 print("Error, impossible to get the frame, make sure that the Intel Realsense camera is correctly connected")
                 continue
 
-            # Apply filters to the depth channel
-            filtered_depth = depth_frame
-            filtered_depth = decimation_filter.process(filtered_depth)
-            filtered_depth = threshold_filter.process(filtered_depth)
-            filtered_depth = depth_to_disparity_filter.process(filtered_depth)
-            filtered_depth = spatial_filter.process(filtered_depth)
-            # filtered_depth = temporal_filter.process(filtered_depth)
-            filtered_depth = disparity_to_depth_filter.process(filtered_depth)
+            # # Apply filters to the depth channel
+            # filtered_depth = depth_frame
+            # filtered_depth = decimation_filter.process(filtered_depth)
+            # filtered_depth = threshold_filter.process(filtered_depth)
+            # filtered_depth = depth_to_disparity_filter.process(filtered_depth)
+            # filtered_depth = spatial_filter.process(filtered_depth)
+            # # filtered_depth = temporal_filter.process(filtered_depth)
+            # filtered_depth = disparity_to_depth_filter.process(filtered_depth)
 
             # Apply colormap to show the depth of the Objects
-            depth_colormap = np.asanyarray(colorizer.colorize(filtered_depth).get_data())
+            depth_colormap = np.asanyarray(colorizer.colorize(depth_frame).get_data())
             # Convert images to numpy arrays
             color_image = np.asanyarray(color_frame.get_data())
 
             # Save to disk
             colorwriter.write(color_image)
             depthwriter.write(depth_colormap)
+            
+            current_timestamp = time.time()
+            print(current_timestamp - previous_timestamp)
+            np.savetxt(timestamps_file, [previous_timestamp], fmt="%10.5f", newline=", ")
+            np.savetxt(timestamps_file, [current_timestamp], fmt="%10.5f")
              
             # Show to screen
             cv2.imshow('RGB', color_image)
@@ -144,6 +151,7 @@ def main(args):
         colorwriter.release()
         depthwriter.release()
         pipeline.stop()
+        timestamps_file.close()
 
 if __name__ == '__main__':
     parser = get_parser()
